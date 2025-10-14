@@ -34,6 +34,10 @@ class Comprobante:
         return self.__Calcular_subtotal() + self.__Calcular_igv()
     
     def Imprimir_Comprobante(self):
+        import datetime
+        import sqlite3
+        conn = sqlite3.connect('Data/Stock.db')
+        c = conn.cursor()
         print(f"--- {self.__tipo} ---")
         print(f"Número: {self.__numero}")
         print(f"Cliente: {self.__cliente.nombre} {self.__cliente.apellido} - DNI: {self.__cliente.DNI}")
@@ -45,6 +49,10 @@ class Comprobante:
         print(f"Total: ${self.__Calcular_total():.2f}")
         print("gracias por su compra!")
         print("-------------------")
+        fecha = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        c.execute("INSERT INTO ListComprobantes (Serie_Numero, Tipo, Dni_Cliente, Fecha, Total) VALUES (?, ?, ?, ?, ?)",
+                  (self.__numero, self.__tipo, self.__cliente.DNI, fecha, self.__Calcular_total()))
+
     
 class Boleta(Comprobante):
     def __init__(self, cliente, productos):

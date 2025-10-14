@@ -34,18 +34,94 @@ class Admin(Usuario):
         while True:
             print("\n--- Menú Admin ---")
             print("1. Crear Usuario")
-            print("2. Agregar Producto")
-            print("3. Salir")
+            print("2. Gestor de Productos")
+            print("3. Reporte de Ventas")
+            print("4. Salir")
             opcion = input("Seleccione una opción: ")
             if opcion == "1":
                 self.crearUsuario()
             elif opcion == "2":
-                self.AgregarProducto()
+                self.menuAlmacen()
             elif opcion == "3":
+                self.ReporteVentas()
+            elif opcion == "4":
                 print("Saliendo del menú Admin.")
                 break
             else:
                 print("Opción inválida. Intente de nuevo.")
+    
+    def ReporteVentas(self):
+        import sqlite3
+        conn=sqlite3.connect('Data/Stock.db')
+        c=conn.cursor()
+        c.execute("SELECT * FROM ListComprobantes")
+        venta=c.fetchall
+        print("Reporte de Ventas")
+        print("-"*60)
+        total_general=0
+        if venta:
+            print(f"{'Serie-Numero':<10} | {'Tipo':<8} | {'Dni_Cliente':<10} | {'Fecha':<10} | {'Total':.2f}")
+            print("-"*60)
+            for vent in venta:
+                print(f"{vent[0]:<10} | {vent[1]:<8} | {vent[2]:<10} | {vent[3]:<10} | {vent[4]:.2f}")
+
+    def menuAlmacen(self):
+        while True:
+            print("\n--- Menú Gestor de Productos ---")
+            print("1. Agregar Producto")
+            print("2. Restockear Producto")
+            print("3. Listar Productos")
+            print("4. Salir")
+            opcion = input("Seleccione una opción: ")
+            if opcion == "1":
+                self.AgregarProducto()
+            elif opcion == "2":
+                self.RestockearProducto()
+            elif opcion == "3":
+                self.ListarProductos()
+            elif opcion == "4":
+                print("Saliendo del menú Gestor de Productos.")
+                break
+            else:
+                print("Opción inválida. Intente de nuevo.")
+    
+    def ListarProductos(self):
+        import sqlite3
+        conn=sqlite3.connect('Data/Stock.db')
+        c=conn.cursor()
+        c.execute("SELECT * FROM Productos")
+        productos=c.fetchall()
+        if productos:
+            print(f"{'Código':<10} {'Nombre':<35} {'Precio':>8} {'Stock':>5}")
+            print("-" * 60)
+            for producto in productos:
+                print(f"{producto[0]:<10} {producto[1]:<35} {producto[2]:>8.2f} {producto[3]:>5}")
+        else:
+            print("No hay productos en el inventario.")
+        conn.close()
+    
+    def RestockearProducto(self):
+        import sqlite3
+        conn=sqlite3.connect('Data/Stock.db')
+        c=conn.cursor()
+        try:
+            codigo=input("Ingrese el código del producto a restockear: ")
+            c.execute("SELECT * FROM Productos WHERE Codigo=?", (codigo,))
+            producto=c.fetchone()
+            if producto:
+                cantidad=int(input("Ingrese la cantidad a restar al stock: "))
+                if cantidad < 0:
+                    raise ValueError("La cantidad a agregar no puede ser negativa.")
+                elif cantidad > producto[3]:
+                    raise ValueError("No se puede restar más de lo que hay en stock.")
+                else:
+                    c.execute("UPDATE Productos SET Stock = Stock - ? WHERE Codigo=?", (cantidad, codigo))
+                    conn.commit()
+                    conn.close()
+            else:
+                print("Producto no encontrado.")
+        except Exception as ve:
+            print(ve)
 
     def AgregarProducto(self):
         import sqlite3
