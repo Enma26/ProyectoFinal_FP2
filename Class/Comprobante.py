@@ -2,7 +2,7 @@ def generar_numero_comprobante(tipo):
     import sqlite3
     conn = sqlite3.connect('Data/Stock.db')
     c = conn.cursor()
-    c.execute("Select serie_numero from Comprobantes where tipo=?", (tipo,))
+    c.execute("Select Serie_Numero from ListComprobantes where tipo=?", (tipo,))
     fila = c.fetchone()
     if fila:
         serie,numero = fila[0].split('-')
@@ -34,6 +34,7 @@ class Comprobante:
         return self.__Calcular_subtotal() + self.__Calcular_igv()
     
     def Imprimir_Comprobante(self):
+        from Class.Cliente import Cliente
         import datetime
         import sqlite3
         conn = sqlite3.connect('Data/Stock.db')
@@ -50,8 +51,11 @@ class Comprobante:
         print("gracias por su compra!")
         print("-------------------")
         fecha = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        c.execute("INSERT INTO ListComprobantes (Serie_Numero, Tipo, Dni_Cliente, Fecha, Total) VALUES (?, ?, ?, ?, ?)",
-                  (self.__numero, self.__tipo, self.__cliente.DNI, fecha, self.__Calcular_total()))
+        c.execute("INSERT INTO ListComprobantes (Serie_Numero, Tipo, Dni_Cliente, Fecha, Total) VALUES (?, ?, ?, ?, ?)", 
+                  (self.__numero,self.__tipo, self.__cliente.DNI, fecha, self.__Calcular_total()))
+        conn.commit()
+        conn.close()
+
 
     
 class Boleta(Comprobante):
