@@ -215,20 +215,45 @@ class Admin(Usuario):
             print("\n--- Menú Gestor de Productos ---")
             print("1. Agregar Producto")
             print("2. Eliminar merma de Productos")
-            print("3. Listar Productos")
-            print("4. Salir")
+            print("3. Modificar precio de Producto")
+            print("4. Listar Productos")
+            print("5. Salir")
             opcion = input("Seleccione una opción: ")
             if opcion == "1":
                 self.AgregarProducto()
             elif opcion == "2":
                 self.RestockearProducto()
             elif opcion == "3":
-                self.ListarProductos()
+                self.ModificarPrecio()
             elif opcion == "4":
+                self.ListarProductos()
+            elif opcion == "5":
                 print("Saliendo del menú Gestor de Productos.")
                 break
             else:
                 print("Opción inválida. Intente de nuevo.")
+    
+    def ModificarPrecio(self):
+        import sqlite3
+        conn=sqlite3.connect('Data/Stock.db')
+        c=conn.cursor()
+        try:
+            codigo=input("Ingrese el código del producto a modificar: ")
+            c.execute("SELECT * FROM Productos WHERE Codigo=?", (codigo,))
+            producto=c.fetchone()
+            if producto:
+                nuevo_precio=float(input("Ingrese el nuevo precio: "))
+                if nuevo_precio < 0:
+                    raise ValueError("El precio no puede ser negativo.")
+                c.execute("UPDATE Productos SET Precio=? WHERE Codigo=?", (nuevo_precio, codigo))
+                conn.commit()
+                conn.close()
+                print("Precio actualizado exitosamente.")
+            else:
+                print("Producto no encontrado.")
+                conn.close()
+        except Exception as ve:
+            print(ve)
     
     def ListarProductos(self):
         import sqlite3

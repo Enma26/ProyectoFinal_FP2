@@ -1,17 +1,33 @@
 def generar_numero_comprobante(tipo):
     import sqlite3
+    serie = "B001" if tipo == "Boleta" else "F001"
     conn = sqlite3.connect('Data/Stock.db')
     c = conn.cursor()
-    c.execute("Select Serie_Numero from ListComprobantes where tipo=?", (tipo,))
+    c.execute("""
+        SELECT Serie_Numero
+        FROM ListComprobantes
+        WHERE Tipo = ? AND Serie_Numero LIKE ?
+        ORDER BY Serie_Numero DESC
+        LIMIT 1
+    """, (tipo, f"{serie}-%"))
     fila = c.fetchone()
     if fila:
-        serie,numero = fila[0].split('-')
-        numero=int(numero)+1
+        ultimo_numero = fila[0]
+        try:
+            numero=int(ultimo_numero.split('-')[1])+1
+        except Exception:
+            numero=1
     else:
-        serie = "B001" if tipo == "Boleta" else "F001"
         numero = 1
-    conn.close()
-    return f"{serie}-{numero:06d}"
+    
+    while True:
+        candidato = f"{serie}-{numero:06d}"
+        c.execute("SELECT 1 FROM ListComprobantes WHERE Serie_Numero = ?", (candidato,))
+        if not c.fetchone():
+            conn.close()
+            return candidato
+        numero += 1
+
 
 class Comprobante:
     IGV = 0.18 
